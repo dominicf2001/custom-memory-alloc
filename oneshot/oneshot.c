@@ -11,7 +11,7 @@ typedef struct dom_allocation {
     int free;
 } dom_allocation;
 
-int allocations_i = 0;
+size_t allocations_i = 0;
 dom_allocation allocations[MAX_ALLOCATIONS];
 
 void* dom_malloc(size_t len){
@@ -22,7 +22,7 @@ void* dom_malloc(size_t len){
 
     void* addr = NULL;
 
-    for (int i = 0; i < MAX_ALLOCATIONS; ++i){
+    for (size_t i = 0; i < MAX_ALLOCATIONS; ++i){
         if (i == allocations_i || allocations[i].free){
             addr = mmap(
                 NULL, 
@@ -55,7 +55,7 @@ void* dom_malloc(size_t len){
 }
 
 int dom_free(void* addr){
-    for (int i = 0; i < allocations_i; ++i){
+    for (size_t i = 0; i < allocations_i; ++i){
         if (allocations[i].addr == addr){
             int code = munmap(allocations[i].addr, allocations[i].len);
             allocations[i].addr = NULL; 
@@ -70,7 +70,7 @@ int dom_free(void* addr){
 }
 
 void dom_debug_print(){
-    for (int i = 0; i < allocations_i; ++i){
+    for (size_t i = 0; i < allocations_i; ++i){
         printf("(p: %p | free: %d | len: %zu), ", allocations[i].addr, allocations[i].free, allocations[i].len);
     }
 
