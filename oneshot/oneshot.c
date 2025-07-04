@@ -5,17 +5,17 @@
 
 #define MAX_ALLOCATIONS 100
 
-typedef struct dom_allocation {
+typedef struct allocation {
     void* addr;
     size_t len;
     int free;
-} dom_allocation;
+} allocation;
 
-size_t allocations_i = 0;
-dom_allocation allocations[MAX_ALLOCATIONS];
+size_t allocations_head = 0;
+allocation allocations[MAX_ALLOCATIONS];
 
 void* dom_malloc(size_t len){
-    if (allocations_i >= MAX_ALLOCATIONS){
+    if (allocations_head >= MAX_ALLOCATIONS){
         errno = ENOMEM; 
         return NULL;
     }
@@ -23,7 +23,7 @@ void* dom_malloc(size_t len){
     void* addr = NULL;
 
     for (size_t i = 0; i < MAX_ALLOCATIONS; ++i){
-        if (i == allocations_i || allocations[i].free){
+        if (i == allocations_head || allocations[i].free){
             addr = mmap(
                 NULL, 
                 len, 
@@ -37,14 +37,14 @@ void* dom_malloc(size_t len){
                 return addr;
             }
 
-            allocations[i] = (dom_allocation) {
+            allocations[i] = (allocation) {
                 .addr = addr,
                 .len = len,
                 .free = 0
             }; 
 
-            if (i == allocations_i){
-                ++allocations_i;
+            if (i == allocations_head){
+                ++allocations_head;
             }
 
             break;
@@ -55,7 +55,7 @@ void* dom_malloc(size_t len){
 }
 
 int dom_free(void* addr){
-    for (size_t i = 0; i < allocations_i; ++i){
+    for (size_t i = 0; i < allocations_head; ++i){
         if (allocations[i].addr == addr){
             int code = munmap(allocations[i].addr, allocations[i].len);
             allocations[i].addr = NULL; 
@@ -70,7 +70,7 @@ int dom_free(void* addr){
 }
 
 void dom_debug_print(){
-    for (size_t i = 0; i < allocations_i; ++i){
+    for (size_t i = 0; i < allocations_head; ++i){
         printf("(p: %p | free: %d | len: %zu), ", allocations[i].addr, allocations[i].free, allocations[i].len);
     }
 
