@@ -14,30 +14,58 @@ int allocations_i = 0;
 dom_allocation allocations[MAX_ALLOCATIONS];
 
 void* dom_malloc(size_t len){
-    void* addr = mmap(
-        NULL, 
-        len, 
-        PROT_READ | PROT_WRITE, 
-        MAP_PRIVATE | MAP_ANONYMOUS,
-        -1,
-        0
-    );
+    if (allocations_i >= MAX_ALLOCATIONS){
+        return NULL; // TODO: handle error
+    }
 
-    allocations[allocations_i++] = (dom_allocation) {
-        .addr = addr,
-        .len = len,
-        .free = 0
-    };
+    void* addr = NULL;
+
+    for (int i = 0; i < MAX_ALLOCATIONS; ++i){
+        if (i == allocations_i || allocations[i].free){
+            addr = mmap(
+                NULL, 
+                len, 
+                PROT_READ | PROT_WRITE, 
+                MAP_PRIVATE | MAP_ANONYMOUS,
+                -1,
+                0
+            );
+
+            allocations[i] = (dom_allocation) {
+                .addr = addr,
+                .len = len,
+                .free = 0
+            }; 
+
+            if (i == allocations_i){
+                ++allocations_i;
+            }
+
+            break;
+        }
+    }
 
     return addr;
 }
 
-void dom_free(){
-
+int dom_free(void* addr){
+    for (int i = 0; i < allocations_i; ++i){
+        if (allocations[i].addr == addr){
+            int code = munmap(allocations[i].addr, allocations[i].len);
+            allocations[i].addr = NULL; 
+            allocations[i].free = 1;
+            allocations[i].len = 0;
+            return code;
+        }
+    }
+    
+    return -1;
 }
 
 void dom_debug_print(){
     for (int i = 0; i < allocations_i; ++i){
-        printf("%p, ", allocations[i].addr);
+        printf("(p: %p | free: %d | len: %zu), ", allocations[i].addr, allocations[i].free, allocations[i].len);
     }
+
+    printf("\n");
 }
