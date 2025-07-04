@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <stdio.h>
@@ -15,7 +16,8 @@ dom_allocation allocations[MAX_ALLOCATIONS];
 
 void* dom_malloc(size_t len){
     if (allocations_i >= MAX_ALLOCATIONS){
-        return NULL; // TODO: handle error
+        errno = ENOMEM; 
+        return NULL;
     }
 
     void* addr = NULL;
@@ -59,6 +61,7 @@ int dom_free(void* addr){
         }
     }
     
+    errno = EFAULT;
     return -1;
 }
 

@@ -13,11 +13,8 @@ int main(){
     dom_debug_print();
     char* str_heap_three = dom_malloc(sizeof(char) * (strlen(str) + 1));
     dom_debug_print();
-
-    //
-    // char* str_heap_four = dom_malloc(sizeof(char) * (strlen(str) + 1));
-    //
-    // dom_debug_print();
+    char* str_heap_four = dom_malloc(sizeof(char) * (strlen(str) + 1));
+    dom_debug_print();
 
     return 0;
 }
