@@ -1,6 +1,6 @@
 CC = gcc
-SRC = main.c ./oneshot/oneshot.c
-INCLUDE = -I./oneshot
+MEM_IMPL=./oneshot/oneshot.c
+SRC = main.c $(MEM_IMPL) 
 TARGET = main
 
 all:

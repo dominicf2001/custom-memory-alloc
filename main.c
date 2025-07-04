@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/mman.h>
 #include <string.h>
-#include "./oneshot/oneshot.h"
+#include "mem.h"
 
 int main(){
     const char* str = "Hello world"; 

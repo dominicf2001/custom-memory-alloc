@@ -33,6 +33,10 @@ void* dom_malloc(size_t len){
                 0
             );
 
+            if ((size_t) addr == -1){
+                return addr;
+            }
+
             allocations[i] = (dom_allocation) {
                 .addr = addr,
                 .len = len,
