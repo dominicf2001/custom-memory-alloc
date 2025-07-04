@@ -6,9 +6,9 @@
 int main(){
     const char* str = "Hello world"; 
     char* str_heap = dom_malloc(sizeof(char) * (strlen(str) + 1));
-    strcpy(str_heap, str);
+    char* str_heap_two = dom_malloc(sizeof(char) * (strlen(str) + 1));
 
-    printf("%s", str_heap);
+    dom_debug_print();
 
     return 0;
 }
