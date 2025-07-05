@@ -1,10 +1,17 @@
 CC = gcc
-MEM_IMPL=./oneshot/oneshot.c
-SRC = main.c $(MEM_IMPL) 
-TARGET = main
+CFLAGS = -Wall -Wextra
+SRC = main.c 
 
-all:
-	$(CC) $(SRC) $(INCLUDE) -o $(TARGET) 
+.PHONY: clean oneshot bump
+
+oneshot.out: oneshot/oneshot.c
+	$(CC) ${CFLAGS} $(SRC) $< -o $@
+oneshot: oneshot.out
+
+bump.out: bump/bump.c
+	$(CC) ${CFLAGS} $(SRC) $< -o $@ 
+bump: bump.out
 
 clean:
-	rm $(TARGET)
+	rm -f oneshot.out bump.out
+

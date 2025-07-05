@@ -7,14 +7,14 @@
 
 typedef struct allocation {
     void* addr;
-    size_t len;
+    size_t bytes;
     int free;
 } allocation;
 
 size_t allocations_head = 0;
 allocation allocations[MAX_ALLOCATIONS];
 
-void* dom_malloc(size_t len){
+void* dom_malloc(size_t bytes){
     if (allocations_head >= MAX_ALLOCATIONS){
         errno = ENOMEM; 
         return NULL;
@@ -26,7 +26,7 @@ void* dom_malloc(size_t len){
         if (i == allocations_head || allocations[i].free){
             addr = mmap(
                 NULL, 
-                len, 
+                bytes, 
                 PROT_READ | PROT_WRITE, 
                 MAP_PRIVATE | MAP_ANONYMOUS,
                 -1,
@@ -39,7 +39,7 @@ void* dom_malloc(size_t len){
 
             allocations[i] = (allocation) {
                 .addr = addr,
-                .len = len,
+                .bytes = bytes,
                 .free = 0
             }; 
 
@@ -57,10 +57,10 @@ void* dom_malloc(size_t len){
 int dom_free(void* addr){
     for (size_t i = 0; i < allocations_head; ++i){
         if (allocations[i].addr == addr){
-            int code = munmap(allocations[i].addr, allocations[i].len);
+            int code = munmap(allocations[i].addr, allocations[i].bytes);
             allocations[i].addr = NULL; 
             allocations[i].free = 1;
-            allocations[i].len = 0;
+            allocations[i].bytes = 0;
             return code;
         }
     }
@@ -71,7 +71,7 @@ int dom_free(void* addr){
 
 void dom_debug_print(){
     for (size_t i = 0; i < allocations_head; ++i){
-        printf("(p: %p | free: %d | len: %zu), ", allocations[i].addr, allocations[i].free, allocations[i].len);
+        printf("(p: %p | free: %d | len: %zu), ", allocations[i].addr, allocations[i].free, allocations[i].bytes);
     }
 
     printf("\n");
