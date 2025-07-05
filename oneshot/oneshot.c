@@ -33,7 +33,7 @@ void* dom_malloc(size_t bytes){
                 0
             );
 
-            if ((size_t) addr == -1){
+            if (addr == MAP_FAILED){
                 return addr;
             }
 

@@ -1,4 +1,4 @@
-#ifndef MEM_H 
+#ifndef BUMP_H 
 
 #include <string.h>
 #include <sys/mman.h>
@@ -9,4 +9,4 @@ int dom_free(void* addr);
 
 void dom_debug_print();
 
-#endif /* mem.h */
+#endif /* bump.h */
