@@ -2,14 +2,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <stdio.h>
-
-#define MAX_ALLOCATIONS 100
-
-typedef struct allocation {
-    void* addr;
-    size_t bytes;
-    int free;
-} allocation;
+#include "oneshot.h"
 
 size_t allocations_head = 0;
 allocation allocations[MAX_ALLOCATIONS] = {0};

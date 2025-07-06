@@ -2,17 +2,16 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include "bump.h"
 
 // -------------
 // MEMORY
 // -------------
 
-#define MEM_SIZE (1 << 20) // 1MB
-
 char* memory_head = NULL; 
 void* memory = NULL;
 
-void* memory_init(){
+void* dom_init(){
     if (memory != NULL){
         errno = EPERM;
         return MAP_FAILED;
@@ -52,7 +51,7 @@ allocation allocations[MAX_ALLOCATIONS] = {0};
 
 void* dom_malloc(size_t bytes){
     if (memory == NULL){
-        memory_init();
+        dom_init();
     } 
 
     if (allocations_head > MAX_ALLOCATIONS){

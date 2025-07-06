@@ -3,6 +3,8 @@
 #include <string.h>
 #include <sys/mman.h>
 
+#define MEM_SIZE (1 << 20) // 1MB
+
 void* dom_malloc(size_t bytes);
 
 int dom_reset();
