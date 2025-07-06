@@ -12,7 +12,7 @@ typedef struct allocation {
 } allocation;
 
 size_t allocations_head = 0;
-allocation allocations[MAX_ALLOCATIONS];
+allocation allocations[MAX_ALLOCATIONS] = {0};
 
 void* dom_malloc(size_t bytes){
     if (allocations_head >= MAX_ALLOCATIONS){

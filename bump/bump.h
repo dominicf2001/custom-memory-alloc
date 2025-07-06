@@ -5,7 +5,7 @@
 
 void* dom_malloc(size_t bytes);
 
-int dom_free(void* addr);
+int dom_reset();
 
 void dom_debug_print();
 

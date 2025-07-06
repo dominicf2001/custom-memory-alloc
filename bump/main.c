@@ -3,9 +3,15 @@
 #include "bump.h"
 
 int main(){
-    const char* str = "Hello world"; 
-    char* str_heap = dom_malloc(sizeof(char) * (strlen(str) + 1));
-    char* str_heap_two = dom_malloc(sizeof(char) * (strlen(str) + 1));
-    dom_debug_print();
+
+    // TESTS
+    
+    // simple allocation
+    {
+        const char* str = "Hello world"; 
+        char* str_heap = dom_malloc(sizeof(char) * (strlen(str) + 1));
+    }
+
+
     return 0;
 }

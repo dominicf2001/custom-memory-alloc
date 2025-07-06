@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/mman.h>
@@ -6,20 +7,20 @@
 // MEMORY
 // -------------
 
-#define MEM_SIZE 1 << 20 // 1MB
+#define MEM_SIZE (1 << 20) // 1MB
 
-void* memory_head = NULL; 
+char* memory_head = NULL; 
 void* memory = NULL;
 
 void* memory_init(){
     if (memory != NULL){
         errno = EPERM;
-        return (void*) -1;
+        return MAP_FAILED;
     }
 
     memory_head = memory = mmap(NULL, MEM_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-    if ((size_t) memory == -1){
+    if (memory == MAP_FAILED){
         return memory;
     }
 
@@ -32,16 +33,15 @@ void* memory_init(){
 // ALLOCATIONS 
 // -------------
 
-#define MAX_ALLOCATIONS 100
+#define MAX_ALLOCATIONS 1000
 
 typedef struct allocation {
     void* addr;
     size_t bytes;
-    int free;
 } allocation;
 
 size_t allocations_head = 0;
-allocation allocations[MAX_ALLOCATIONS];
+allocation allocations[MAX_ALLOCATIONS] = {0};
 
 // -------------
 
@@ -55,53 +55,42 @@ void* dom_malloc(size_t bytes){
         memory_init();
     } 
 
-    if ((memory_head + bytes) - memory >= MEM_SIZE){
+    if (allocations_head > MAX_ALLOCATIONS){
         errno = ENOMEM;
         return NULL;
     }
 
-    void* addr = NULL;
-
-    for (size_t i = 0; i < MAX_ALLOCATIONS; ++i){
-        if (i == allocations_head || allocations[i].free){
-            addr = memory_head; 
-            allocations[i] = (allocation) {
-                .addr = addr, 
-                .bytes = bytes,
-                .free = 0,
-            }; 
-
-            if (i == allocations_head){
-                ++allocations_head;
-            }
-
-            memory_head = memory_head + bytes;
-
-            break;
-        }
+    if ((size_t) ((memory_head + bytes) - (char*)memory) >= MEM_SIZE){
+        errno = ENOMEM;
+        return NULL;
     }
+
+    void* addr = memory_head;
+
+    allocations[allocations_head++] = (allocation) {
+        .addr = addr, 
+        .bytes = bytes,
+    }; 
+    memory_head = memory_head + bytes;
 
     return addr;
 }
 
-int dom_free(void* addr){
-    for (size_t i = 0; i < allocations_head; ++i){
-        if (allocations[i].addr == addr){
-            int code = munmap(allocations[i].addr, allocations[i].bytes);
-            allocations[i].addr = NULL; 
-            allocations[i].free = 1;
-            allocations[i].bytes = 0;
-            return code;
-        }
-    }
-    
-    errno = EFAULT;
-    return -1;
+int dom_reset(){
+    // reset allocations
+    allocations_head = 0;
+    memset(allocations, 0, sizeof(allocations));
+
+    // reset memory
+    int code = munmap(memory, MEM_SIZE); 
+    memory_head = memory = NULL;
+
+    return code;
 }
 
 void dom_debug_print(){
     for (size_t i = 0; i < allocations_head; ++i){
-        printf("(p: %p | free: %d | len: %zu), ", allocations[i].addr, allocations[i].free, allocations[i].bytes);
+        printf("(p: %p | len: %zu), ", allocations[i].addr, allocations[i].bytes);
     }
 
     printf("\n");
