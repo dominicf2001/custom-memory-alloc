@@ -1,97 +1,66 @@
 #include "block.h"
-#include <string.h>
-#include <stdio.h>
+#include <asm-generic/errno-base.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/types.h>
 #include <sys/mman.h>
 
-// -------------
-// MEMORY
-// -------------
+void *pool = NULL;
+u_int8_t *pool_base = NULL;
+void *free_list = NULL;
 
-#define MEM_SIZE (1 << 20) // 1MB
+void dom_init() {
+    pool = mmap(NULL, POOL_SIZE, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANON, -1, 0);
 
-char* memory_head = NULL; 
-void* memory = NULL;
+    free_list = pool_base = pool;
 
-void* memory_init(){
-    if (memory != NULL){
-        errno = EPERM;
-        return MAP_FAILED;
+    for (size_t i = 0; i < NUM_OF_BLOCKS; ++i) {
+        int reachedLastBlock = (i == (NUM_OF_BLOCKS - 1));
+
+        void *current_block = &pool_base[i * BLOCK_SIZE];
+        void *next_block =
+            reachedLastBlock ? NULL : &pool_base[(i + 1) * BLOCK_SIZE];
+
+        *((void **)current_block) = next_block;
     }
-
-    memory_head = memory = mmap(NULL, MEM_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-    if (memory == MAP_FAILED){
-        return memory;
-    }
-
-    return memory;
 }
 
 // -------------
-
-// -------------
-// ALLOCATIONS 
+// IMPLEMENTATIONS
 // -------------
 
-#define MAX_ALLOCATIONS 1000
-#define BLOCK_SIZE 10000
+void* dom_malloc(size_t bytes) {
+    if (pool == NULL){
+        dom_init();
+    }
 
-typedef struct allocation {
-    void* addr;
-    int free;
-    size_t bytes;
-} allocation;
-
-size_t allocations_head = 0;
-allocation allocations[MAX_ALLOCATIONS] = {0};
-
-// -------------
-
-
-// -------------
-// IMPLEMENTATIONS 
-// -------------
-
-void* dom_malloc(size_t bytes){
-    if (memory == NULL){
-        memory_init();
-    } 
-
-    if ((size_t) ((memory_head + BLOCK_SIZE) - (char*)memory) >= MEM_SIZE){
-        errno = ENOMEM;
+    void* next_free_block = (*(void**)free_list); 
+    if (next_free_block == NULL){
+        errno = ENOMEM; 
         return NULL;
     }
 
-    void* addr = NULL;
+    // pop off free list
+    void* block = free_list;
+    free_list = next_free_block;
 
-    for (size_t i = 0; i < MAX_ALLOCATIONS; ++i){
-        addr = memory_head; 
-        allocations[allocations_head++] = (allocation) {
-            .addr = addr, 
-            .free = 0,
-            .bytes = bytes
-        }; 
-        memory_head = memory_head + BLOCK_SIZE;
-        break;
-    }
-
-    return addr;
+    return block; 
 }
 
-int dom_free(void *addr){
-    for (size_t i = 0; i < MAX_ALLOCATIONS; ++i){
-        if (allocations[i].addr == addr){
-            allocations[i].free = 1;
+int dom_free(void *addr) {}
+
+void dom_debug_print() {
+    for (size_t i = 0; i < NUM_OF_BLOCKS; ++i){
+        void* current_block = &pool_base[i * BLOCK_SIZE];
+        printf("Block %zu:", i);
+        for (size_t j = 0; j < BLOCK_SIZE; ++j){
+            printf("%x ", ((u_int8_t*) current_block)[j]); 
         }
+        printf("\n");
     }
-}
-
-void dom_debug_print(){
-    for (size_t i = 0; i < allocations_head; ++i){
-        printf("(p: %p | free: %d), ", allocations[i].addr, allocations[i].free);
-    }
-    printf("\n");
 }
 
 // -------------
