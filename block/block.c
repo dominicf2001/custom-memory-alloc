@@ -1,11 +1,9 @@
 #include "block.h"
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 
 void *pool = NULL;
 u_int8_t *pool_base = NULL;
@@ -42,14 +40,14 @@ void* dom_malloc(size_t bytes) {
         dom_init();
     }
 
-    void* next_free_block = (*(void**)free_list); 
-    if (next_free_block == NULL){
+    if (free_list == NULL){
         errno = ENOMEM; 
         return NULL;
     }
 
     // pop off free list
     void* block = free_list;
+    void* next_free_block = (*(void**)free_list); 
     free_list = next_free_block;
 
     return block; 
