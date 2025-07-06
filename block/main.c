@@ -13,7 +13,7 @@ int main(){
 
     {
         const char* testStr = "aaaaaaaaaaaaaaaaaaaaaaa";
-        char* test = dom_malloc(sizeof(strlen(testStr) + 1));
+        char* test = dom_malloc(10);
         strcpy(test, testStr);
     }
 

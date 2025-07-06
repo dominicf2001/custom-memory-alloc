@@ -33,6 +33,11 @@ void dom_init() {
 // -------------
 
 void* dom_malloc(size_t bytes) {
+    if (bytes > BLOCK_SIZE){
+        errno = EPERM;
+        return NULL;
+    }
+
     if (pool == NULL){
         dom_init();
     }
