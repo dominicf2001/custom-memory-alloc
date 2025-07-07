@@ -45,7 +45,7 @@ void* dom_malloc(size_t bytes) {
         return NULL;
     }
 
-    // pop off free list
+    // pop off of free list
     void* block = free_list;
     void* next_free_block = (*(void**)free_list); 
     free_list = next_free_block;
@@ -53,7 +53,13 @@ void* dom_malloc(size_t bytes) {
     return block; 
 }
 
-int dom_free(void *addr) {}
+int dom_free(void *addr) {
+    memset(addr, 0, BLOCK_SIZE);
+    // push on to free list
+    *(void**)addr = free_list; 
+    free_list = addr;
+    return 0;
+}
 
 void dom_debug_print() {
     for (size_t i = 0; i < NUM_OF_BLOCKS; ++i){
